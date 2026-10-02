@@ -91,8 +91,12 @@ def main():
         if not shown:
             continue
         print(f"[{i}] {r['ts']} {os.path.basename(r['cwd'])} {r['seconds']}s")
+        last = None
         for idx, q, a in shown:
-            print(f"    {short(states[idx])}\n      {q}: {fmt(a)}")
+            if idx != last:
+                print(f"    {short(states[idx])}")
+                last = idx
+            print(f"      {q}: {fmt(a)}")
 
 
 if __name__ == "__main__":

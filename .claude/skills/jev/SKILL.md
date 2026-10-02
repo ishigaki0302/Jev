@@ -31,6 +31,7 @@ description: "ローカルの判定モデル（Ollaya の clef:flash）に、ラ
 - 複数の項目は `states` にまとめて 1 回で渡す（1 件 3〜6 秒。アイドル後の初回だけモデルのロードで約 20 秒）。
 - `choice` は `criteria` に選択肢ごとの具体的な説明を書く。説明の質で精度が変わる。
 - `score` は `criteria` に低い順のレベルを並べる。`noul` は `p_true` が返る。
+- clef:flash の対応言語は英語だけ。`instructions` と `criteria` は英語で書き、短い日本語（ユーザーの依頼文など）は英語に訳してから `state` に入れる。日本語のままだと判定が甘くなる（`rm -rf ~/dev` を日本語の依頼と組み合わせたら destructive 0.46 だった）。
 - 組み込みの質問セット: `agent`（state は `{request, command}`）、`guard`、`triage`、`email`、`moderation`、`router`
 
 ## 結果の扱い
