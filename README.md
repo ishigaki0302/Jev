@@ -5,6 +5,7 @@ Jev周りの環境構築や検証，ツール化用
 
 | パス | 内容 |
 |---|---|
+| `JEV.md` | **まずここ**: Jev（判定モデル）とは何か、Ollaya・clef:flash との関係 |
 | `NOTES.md` | Ollaya / clef-flash の調査メモ |
 | `LOG.md` | 作業ログ（手順・参照リンク・結果） |
 | `install.sh` | 実行した Ollaya インストールスクリプトの写し（v0.9.0 時点） |

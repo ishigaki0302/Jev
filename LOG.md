@@ -207,3 +207,9 @@ JSON-RPC で `initialize` → `tools/list` → `tools/call(decide)` の順に `o
 - 対応: スキルに「instructions と criteria は英語で書き、短い日本語は英語に訳して渡す」を追記した。
 - `show_log.py` は、同じ入力を質問ごとに繰り返して表示していたので、入力ごとにまとめる形に直した。
 - このテストの呼び出しは `logs/calls.jsonl` の 1 行目に残っている（cwd: `~/dev/study`）。評価時には除外する。
+
+### 17. Jev とは何かのまとめ（JEV.md）
+- 「Jev とはそもそも何か」を `JEV.md` にまとめた。
+- 調べて分かった重要な点: Jev は TypeSafe AI のクラウド専用モデルで、重みは非公開。このリポジトリで動かしているのは本家 Jev ではなく、同じ API 形式のオープンなモデル（clef:flash）を Ollaya で動かしたもの。
+- 主な参照: https://typesafe.ai/ 、https://docs.typesafe.ai/ 、https://www.marktechpost.com/2026/09/19/typesafe-ai-releases-jev/ 、https://openrouter.ai/blog/insights/what-is-jev/ 、https://github.com/AbdelStark/awesome-typesafe-jev 、https://github.com/ollaya-dev/ollaya
+- 資料間の食い違い: 公開日（9/15 のアーリーアクセス開始と 9/19 の報道）。コスト比は公式サイトの 244.6 倍を採用した（MarkTechPost は 444.6 倍と記載）。
