@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ollaya": {
+      "command": "/Users/hdymacuser/.local/bin/ollaya",
+      "args": ["mcp"]
+    }
+  }
+}
