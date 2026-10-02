@@ -182,3 +182,17 @@ JSON-RPC で `initialize` → `tools/list` → `tools/call(decide)` の順に `o
 - 実測: アイドル状態からの初回はロードに 16.8 秒（合計 19.7 秒）。2 件まとめた判定（preset: agent）は 9.2 秒。
 - `.mcp.json` を `jev` だけに変えた。`.claude/skills/ollaya-decisions/` は laya 前提なので削除し、`.claude/skills/jev/SKILL.md` に置き換えた。
 - 動作確認: JSON-RPC で initialize、tools/list、decide（`states` 2 件）、引数エラー、status を確認。`git clean -fdx` は destructive 0.92 と判定された。
+
+### 15. ユーザー全体への登録と呼び出しログ
+- 方針: まずユーザー全体で試し、問題があればすぐ外す。使われた判定はログに残して、あとで評価する。
+- `mcp/jev_mcp.py` に記録を追加した。呼び出しごとに `logs/calls.jsonl` に 1 行追記する（時刻、cwd、引数、結果、エラー、所要時間）。保存先は `JEV_LOG` で変えられ、空文字にすると記録しない。
+- `logs/` は他プロジェクトのコードやコマンドを含むので `.gitignore` に入れた。
+- 確認用に `mcp/show_log.py` を作った（集計、直近の呼び出し、`--low` で確信度の低い判定、`--full` で全文）。テスト用ログで動作を確認してから削除した。
+- 登録:
+  ```bash
+  claude mcp add --scope user jev -e JEV_MODEL=clef:flash -e JEV_KEEP_ALIVE=30m -- /usr/bin/python3 ~/dev/study/Jev/mcp/jev_mcp.py
+  ln -s ~/dev/study/Jev/.claude/skills/jev ~/.claude/skills/jev
+  ```
+- `claude mcp get jev` の表示は `Scope: User config / Status: ✔ Connected` だった。
+- user スコープと重複するため、プロジェクトの `.mcp.json` は削除した。
+- 削除手順: `claude mcp remove jev -s user && rm ~/.claude/skills/jev`

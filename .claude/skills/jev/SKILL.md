@@ -37,4 +37,8 @@ description: "ローカルの判定モデル（Ollaya の clef:flash）に、ラ
 
 - `confidence` や `p_true` が 0.2〜0.8 のときは、自分で中身を確認する。
 - プロンプトインジェクション検出は、評価で 10 件中 1 件を見逃した。安全判定の唯一の根拠にしない。
-- 評価結果: `eval/`、`LOG.md` の 10〜13 の項（clef:flash は 74 件中 73 件正解）。
+- 評価結果: `~/dev/study/Jev/eval/`、`~/dev/study/Jev/LOG.md` の 10〜13 の項（clef:flash は 74 件中 73 件正解）。
+
+## ログ
+
+呼び出しはすべて `~/dev/study/Jev/logs/calls.jsonl` に記録される（試用中）。ユーザーに「Jev のログを見せて」と頼まれたら `python3 ~/dev/study/Jev/mcp/show_log.py` を実行する（`--low` で確信度が低い判定だけ、`-n 50` で件数指定）。

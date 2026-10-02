@@ -12,6 +12,8 @@
   JEV_KEEP_ALIVE  モデルを残す時間（既定: 30m）
   JEV_OLLAYA      ollaya の実行ファイル（既定: ~/.local/bin/ollaya）
   OLLAYA_HOST     Ollaya のアドレス（既定: 127.0.0.1:11435）
+  JEV_LOG         呼び出しログ（JSON Lines）の保存先（既定: このリポジトリの logs/calls.jsonl）
+                  空文字にするとログを取らない
 """
 import json
 import os
@@ -25,6 +27,8 @@ MODEL = os.environ.get("JEV_MODEL", "clef:flash")
 KEEP_ALIVE = os.environ.get("JEV_KEEP_ALIVE", "30m")
 OLLAYA = os.environ.get("JEV_OLLAYA", os.path.expanduser("~/.local/bin/ollaya"))
 BASE = "http://" + os.environ.get("OLLAYA_HOST", "127.0.0.1:11435")
+LOG = os.environ.get("JEV_LOG", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                              "logs", "calls.jsonl"))
 PROTOCOL = "2025-06-18"
 
 INSTRUCTIONS = f"""Jev runs a local decision model ({MODEL}) on this machine. It never generates text: it
@@ -167,6 +171,21 @@ def status(_args):
 HANDLERS = {"decide": decide, "status": status}
 
 
+def log_call(tool, args, result, error, seconds):
+    """あとで評価できるよう、呼び出しを 1 行 1 件で追記する。ログの失敗でツールは止めない。"""
+    if not LOG:
+        return
+    entry = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "cwd": os.getcwd(), "tool": tool,
+             "model": MODEL, "args": args, "result": result, "error": error,
+             "seconds": round(seconds, 2)}
+    try:
+        os.makedirs(os.path.dirname(LOG), exist_ok=True)
+        with open(LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+
+
 def reply(msg_id, result=None, error=None):
     msg = {"jsonrpc": "2.0", "id": msg_id}
     if error is None:
@@ -198,14 +217,18 @@ def handle(msg):
         if fn is None:
             reply(msg_id, error={"code": -32602, "message": f"unknown tool {params.get('name')}"})
             return
+        args, t0 = params.get("arguments") or {}, time.time()
         try:
-            result = fn(params.get("arguments") or {})
-            text = json.dumps(result, ensure_ascii=False)
-            reply(msg_id, {"content": [{"type": "text", "text": text}], "structuredContent": result,
-                           "isError": False})
+            result = fn(args)
         except Exception as e:  # ツールのエラーとして Claude に返す
-            reply(msg_id, {"content": [{"type": "text", "text": f"{type(e).__name__}: {e}"}],
-                           "isError": True})
+            err = f"{type(e).__name__}: {e}"
+            log_call(params["name"], args, None, err, time.time() - t0)
+            reply(msg_id, {"content": [{"type": "text", "text": err}], "isError": True})
+            return
+        log_call(params["name"], args, result, None, time.time() - t0)
+        text = json.dumps(result, ensure_ascii=False)
+        reply(msg_id, {"content": [{"type": "text", "text": text}], "structuredContent": result,
+                       "isError": False})
     else:
         reply(msg_id, error={"code": -32601, "message": f"method not found: {method}"})
 

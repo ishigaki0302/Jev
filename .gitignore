@@ -220,3 +220,4 @@ __marimo__/
 # Jev local
 .pull-*.log
 .DS_Store
+logs/
