@@ -1,8 +1,12 @@
 {
   "mcpServers": {
-    "ollaya": {
-      "command": "/Users/hdymacuser/.local/bin/ollaya",
-      "args": ["mcp"]
+    "jev": {
+      "command": "python3",
+      "args": ["mcp/jev_mcp.py"],
+      "env": {
+        "JEV_MODEL": "clef:flash",
+        "JEV_KEEP_ALIVE": "30m"
+      }
     }
   }
 }

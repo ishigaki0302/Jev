@@ -171,3 +171,14 @@ JSON-RPC で `initialize` → `tools/list` → `tools/call(decide)` の順に `o
 - laya の誤りの多くは閾値のずれによるもので、並び順は正しい。タスクごとに閾値を決めれば、速い laya で十分な可能性がある（評価件数が少ないので要確認）。
 - prompt_injection だけは laya でも AUC 0.80 で、閾値を調整しても解決しない。
 - nli は AUC でも laya に劣る。**MLX 対応モデルの中では laya が最良**という結論。
+
+### 14. Claude Code のツール化（方針 1: clef:flash のみ）
+- `ollaya mcp` の `decide` はモデルを省略すると laya を使い、keep_alive も指定できない。既定モデルを指定する環境変数もない（バイナリ内の `OLLAYA_*` を確認）。
+- そこで、clef:flash に固定した MCP サーバー `mcp/jev_mcp.py` を自作した（標準ライブラリのみ、stdio）。
+  - ツール: `decide`（`state` または `states` でまとめて判定）、`status`
+  - `/api/decide` に `keep_alive: "30m"` を付けて呼ぶ（HTTP API では指定できることを確認）
+  - 返り値は必要なフィールドだけに絞って、Claude 側のトークンを減らす
+  - Ollaya サーバーが止まっていれば `ollaya serve` を起動する
+- 実測: アイドル状態からの初回はロードに 16.8 秒（合計 19.7 秒）。2 件まとめた判定（preset: agent）は 9.2 秒。
+- `.mcp.json` を `jev` だけに変えた。`.claude/skills/ollaya-decisions/` は laya 前提なので削除し、`.claude/skills/jev/SKILL.md` に置き換えた。
+- 動作確認: JSON-RPC で initialize、tools/list、decide（`states` 2 件）、引数エラー、status を確認。`git clean -fdx` は destructive 0.92 と判定された。
