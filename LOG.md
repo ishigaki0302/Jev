@@ -59,3 +59,14 @@ ollaya run laya --preset triage --verbose "Hi, I cannot log in since this mornin
 ```bash
 ollaya pull clef:flash
 ```
+- 2026-10-02 16:05 時点で約 2GB。バックグラウンドで続行中。
+
+### 8. MCP サーバーの動作確認（stdio）
+JSON-RPC で `initialize` → `tools/list` → `tools/call(decide)` の順に `ollaya mcp` へ直接送った。
+```json
+{"name":"decide","arguments":{"model":"laya","state":"このPRはREADMEの誤字修正のみです",
+ "questions":{"risky":{"type":"noul","instructions":"Is this change risky to merge?"}}}}
+```
+- 応答: `{"model":"laya:multilingual","answers":{"risky":{"type":"noul","noul":0.0036}},"usage":{"input_tokens":43,"output_tokens":0}}`
+- 日本語は自動で `laya:multilingual` に振り分けられた。MCP 経由でも正常に動いている。
+- Claude Code が `.mcp.json` を読むのはセッション起動時。`Jev/` で `claude` を起動し直すと `mcp__ollaya__decide` が使えるようになる。
