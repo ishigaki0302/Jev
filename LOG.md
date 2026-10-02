@@ -115,6 +115,25 @@ JSON-RPC で `initialize` → `tools/list` → `tools/call(decide)` の順に `o
 ### 11. clef:flash が GPU を使わない理由
 - `ollaya ps` の表示は `DEVICE cpu / PRECISION F32` だった。
 - `ollaya show clef:flash` によると、format は onnx、engine は onnxruntime、precision は F32。Ollaya が配布する clef は ONNX 版で、macOS では onnxruntime の CPU 実行になる。MLX（Apple GPU）で動くのは、MLX 版が用意された一部のモデルだけ。
-- laya も onnx / onnxruntime なので CPU 実行。モデルが小さい（421M）ため速いだけ。
+- ~~laya も onnx / onnxruntime なので CPU 実行~~ → 誤り。`ollaya ps` で laya:en は `DEVICE metal` だった（12 の項を参照）。
 - F32 なので 9B で約 19GB のメモリを使う。
 - GPU で動かす手段（MLX 版の有無、設定）は Ollaya のドキュメントからは確認できなかった。
+
+### 12. MLX（Apple GPU）で動くモデルの調査
+- 参照: https://ollaya.dev/ の比較表と注記（`/docs/models` は 404 だった）
+- 公式の記述: "On a Mac, laya and nli run on the Apple GPU through MLX; other models ... use the CPU."
+- **Mac で GPU を使えるのは laya と nli の 2 つだけ。** winnow（GGUF / llama.cpp）を含め、他のモデルはすべて CPU で動く。
+- 実測でも、laya:en は `DEVICE metal`、clef:flash は `DEVICE cpu` だった。
+
+公式ベンチマーク（RTX 4090、5 問のリクエストの中央値）から抜粋:
+
+| モデル | 正解率 | 遅延 | Mac の GPU |
+|---|---|---|---|
+| winnow:e4b | 0.722 | 89 ms | ✗ |
+| kev:9b | 0.722 | 498 ms | ✗ |
+| clef:flash | 0.703 | 532 ms | ✗ |
+| **nli** | **0.548** | 20 ms | ✓ |
+| **laya:en** | **0.361** | 10 ms | ✓ |
+
+- 公式ベンチマーク上、MLX 対応で最も性能が高いのは **nli**（0.548）。laya:en（0.361）を上回る。
+- ただし、自前の評価セットでは laya が 0.85 だった。ベンチマークの中身によって順位は変わりうるので、nli は実測して確かめる必要がある。
