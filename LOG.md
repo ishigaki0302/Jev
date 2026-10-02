@@ -137,3 +137,37 @@ JSON-RPC で `initialize` → `tools/list` → `tools/call(decide)` の順に `o
 
 - 公式ベンチマーク上、MLX 対応で最も性能が高いのは **nli**（0.548）。laya:en（0.361）を上回る。
 - ただし、自前の評価セットでは laya が 0.85 だった。ベンチマークの中身によって順位は変わりうるので、nli は実測して確かめる必要がある。
+
+### 13. nli の評価と 3 モデルの比較
+- `ollaya pull nli`（435M、onnx / onnxruntime、F32、英語のみ）
+- `python3 eval/run_eval.py nli` → `eval/results/nli.json`
+- **公式の記述と違い、`ollaya ps` で nli は `DEVICE cpu` だった。** Ollaya 0.9.0 の Mac で GPU を使っていたのは laya だけ。
+
+| タスク | laya | nli | clef:flash |
+|---|---|---|---|
+| cmd_destructive | 0.92 | 0.50 | **1.00** |
+| prompt_injection | 0.60 | 0.50 | **0.90** |
+| commit_type | 0.83 | 0.83 | **1.00** |
+| output_failed | 0.90 | 0.60 | **1.00** |
+| relevance | 0.70 | 0.50 | **1.00** |
+| review_severity | **1.00** | 0.90 | **1.00** |
+| task_route | **1.00** | 0.90 | **1.00** |
+| **合計** | 0.85 | 0.68 | **0.99** |
+| 1 件の時間 | 12〜126 ms | 32〜288 ms | 2.9〜6.2 s |
+| 実行デバイス | metal | cpu | cpu |
+
+- nli は yes/no 系の 4 タスク（42 件）で 41 件を No と答えた。閾値 0.5 では使えない。
+
+#### 閾値に依存しない比較（yes/no 系タスクの AUC）
+正例と負例を確率の大小で分けられているかを見る。1.00 なら、閾値を調整すれば全問正解できる。
+
+| タスク | laya | nli | clef:flash |
+|---|---|---|---|
+| cmd_destructive | **1.00** | 0.93 | **1.00** |
+| prompt_injection | 0.80 | 0.76 | **1.00** |
+| output_failed | **1.00** | 0.96 | **1.00** |
+| relevance | **1.00** | 0.72 | **1.00** |
+
+- laya の誤りの多くは閾値のずれによるもので、並び順は正しい。タスクごとに閾値を決めれば、速い laya で十分な可能性がある（評価件数が少ないので要確認）。
+- prompt_injection だけは laya でも AUC 0.80 で、閾値を調整しても解決しない。
+- nli は AUC でも laya に劣る。**MLX 対応モデルの中では laya が最良**という結論。
